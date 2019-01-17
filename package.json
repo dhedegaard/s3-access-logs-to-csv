@@ -1,0 +1,30 @@
+{
+  "name": "@dhedegaard/s3-access-logs-to-csv",
+  "version": "1.0.1",
+  "description": "Fetches S3 access logs from a bucket, parses them, and outputs the various fields as CSV",
+  "main": "build/index.js",
+  "scripts": {
+    "lint": "tslint --project tsconfig.json",
+    "build": "tsc",
+    "start": "npm run build && node build/index.js",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/aws-sdk": "^2.7.0",
+    "@types/csv-stringify": "^1.4.2",
+    "@types/json2csv": "^4.2.0",
+    "@types/node": "^10.12.18",
+    "aws-sdk": "^2.389.0",
+    "csv-stringify": "^5.2.0",
+    "json2csv": "^4.3.3",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.2"
+  },
+  "files": [
+    "build/"
+  ]
+}
