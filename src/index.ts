@@ -1,11 +1,11 @@
 import AWS from 'aws-sdk';
 import stringify from 'csv-stringify';
-import { Writable } from 'stream';
+import { WritableStreamBuffer } from 'stream-buffers';
 
 async function* iterateAllFiles(
   conn: AWS.S3,
   bucket: string,
-  prefix: string,
+  prefix: string
 ): AsyncIterableIterator<string> {
   let continuationToken;
   while (true) {
@@ -13,7 +13,7 @@ async function* iterateAllFiles(
       .listObjectsV2({
         Bucket: bucket,
         Prefix: prefix,
-        ContinuationToken: continuationToken,
+        ContinuationToken: continuationToken
       })
       .promise()) as AWS.S3.ListObjectsV2Output;
     const content = resp.Contents;
@@ -36,12 +36,12 @@ async function* iterateAllFiles(
 const getContent = async (
   conn: AWS.S3,
   bucket: string,
-  key: string,
+  key: string
 ): Promise<string | void> => {
   const resp = await conn
     .getObject({
       Bucket: bucket,
-      Key: key,
+      Key: key
     })
     .promise();
   const body = resp.Body;
@@ -95,7 +95,9 @@ const parseLine = (inputKey: string, line: string): AccessLogLine => {
     ...userAgentAndVersionId
   ] = line.split(' ');
   const versionId = userAgentAndVersionId[userAgentAndVersionId.length - 1];
-  const userAgent = userAgentAndVersionId.slice(0, userAgentAndVersionId.length - 1).join(' ');
+  const userAgent = userAgentAndVersionId
+    .slice(0, userAgentAndVersionId.length - 1)
+    .join(' ');
   return {
     inputKey,
     bucketOwner,
@@ -119,7 +121,7 @@ const parseLine = (inputKey: string, line: string): AccessLogLine => {
     turnAroundTime,
     referrer,
     userAgent,
-    versionId,
+    versionId
   };
 };
 
@@ -135,10 +137,12 @@ const parseContent = (key: string, content: string): AccessLogLine[] => {
   return result;
 };
 
-const writeLines = (lines: AccessLogLine[], output: Writable) => {
+const writeLines = (lines: AccessLogLine[]): Buffer => {
+  const writableBuffer = new WritableStreamBuffer();
   stringify(lines, {
-    header: true,
-  }).pipe(output);
+    header: true
+  }).pipe(writableBuffer);
+  return writableBuffer.getContents();
 };
 
 const main = async (
@@ -146,12 +150,12 @@ const main = async (
   secretAccessKey: string,
   region: string,
   bucket: string,
-  prefix: string,
-) => {
+  prefix: string
+): Promise<Buffer> => {
   const conn = new AWS.S3({
     accessKeyId,
     secretAccessKey,
-    region,
+    region
   });
 
   let lines: ReturnType<typeof parseContent> = [];
@@ -162,16 +166,29 @@ const main = async (
     }
     lines = [...lines, ...parseContent(key, content)];
   }
-  writeLines(lines, process.stdout);
+  return writeLines(lines);
 };
 
 if (module === require.main) {
   const args = process.argv.slice(2);
   if (args.length !== 5) {
     // tslint:disable-next-line:no-console
-    console.error('Please supply the arguments: "accessKey" "secret" "region" "bucket" "prefix"');
+    console.error(
+      'Please supply the arguments: "accessKey" "secret" "region" "bucket" "prefix"'
+    );
     process.exit(1);
   }
-
-  main(...args as [string, string, string, string, string]);
+  // tslint:disable-next-line:no-console
+  main(...(args as [string, string, string, string, string]))
+    .then((buffer) => {
+      // tslint:disable-next-line:no-console
+      console.log(buffer);
+    })
+    .catch((error) => {
+      // tslint:disable-next-line:no-console
+      console.error(error);
+      process.exit(1);
+    });
 }
+
+export default main;
