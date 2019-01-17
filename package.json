@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "Fetches S3 access logs from a bucket, parses them, and outputs the various fields as CSV",
   "main": "build/index.js",
+  "homepage": "https://github.com/dhedegaard/s3-access-logs-to-csv",
   "scripts": {
     "lint": "tslint --project tsconfig.json",
     "build": "tsc",
